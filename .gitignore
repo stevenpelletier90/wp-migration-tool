@@ -1,0 +1,115 @@
+# WordPress Migration Tool - Git Ignore File
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Generated WordPress XML Files
+wordpress_import.xml
+wordpress_import_backup_*.xml
+
+# Project-specific generated files
+extracted_links.txt
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Environment variables (if you add any)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Cache directories
+.cache/
+.pytest_cache/
+__pycache__/
+.ruff_cache/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows reserved filenames (prevent accidental creation)
+nul
+con
+prn
+aux
+com[1-9]
+lpt[1-9]
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Coverage reports (if you add testing)
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Flask instance folder (if used)
+instance/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Keep these important files
+!urls.txt
+!site_config.json
+!CLAUDE.md
+!requirements.txt
+!index.html
+!*.py

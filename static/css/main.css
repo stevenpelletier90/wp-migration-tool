@@ -1,0 +1,15 @@
+/* Custom styles for WordPress Migration Tool */
+
+/* Toast notifications for copy feedback */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 250px;
+}
+
+/* Additional styling for URL management */
+.url-checkbox {
+    margin-right: 0.5rem;
+}

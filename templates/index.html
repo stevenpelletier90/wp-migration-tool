@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WordPress Migration Tool</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.6/htmx.min.js"
+      integrity="sha512-fzOjdYXF0WrjlPAGWmlpHv2PnJ1m7yP8QdWj1ORoM7Bc4xmKcDRBOXSOZ4Wedia0mjtGzXQX1f1Ah1HDHAWywg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+      defer
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.js"
+      integrity="sha512-Qg4yHOPXaMOpvyQ8hk5ZVYUIXGE/0hxftn0lecaz04ohvI0ytM7AXpSzK1sfcYk79B1WexR3nG37Q/JboHLB2Q=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.7/css/bootstrap.min.css"
+      integrity="sha512-fw7f+TcMjTb7bpbLJZlP8g2Y4XcCyFZW8uy8HsRZsH/SwbMw0plKHFHr99DN3l04VsYNwvzicUX/6qurvIxbxw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.7/js/bootstrap.min.js"
+      integrity="sha512-zKeerWHHuP3ar7kX2WKBSENzb+GJytFSBL6HrR2nPSR1kOX1qjm+oHooQtbDpDBSITgyl7QXZApvDfDWvKjkUw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  </head>
+  <body>
+    <div class="container my-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <h1 class="text-center mb-4">WordPress Migration Tool</h1>
+          <p class="text-center text-muted mb-5">Extract blog posts and generate WordPress import files</p>
+
+          <!-- Step 1: URL Input -->
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Step 1: Add URLs</h5>
+            </div>
+            <div class="card-body">
+              <div id="url-section">
+                <div class="mb-3">
+                  <label class="form-label">Blog Post URLs (one per line)</label>
+                  <textarea
+                    id="url-input"
+                    name="url-input"
+                    class="form-control"
+                    rows="6"
+                    placeholder="https://example.com/blog/post-1.htm
+https://example.com/blog/post-2.htm
+https://example.com/blog/post-3.htm"
+                  ></textarea>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  hx-post="/api/urls"
+                  hx-include="[name='url-input']"
+                  hx-target="#url-status"
+                  hx-swap="innerHTML"
+                >
+                  Add URLs
+                </button>
+                <div id="url-status" class="mt-3"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Migration -->
+          <div class="card mb-4" id="migration-card" style="display: none">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">Step 2: Extract Content</h5>
+            </div>
+            <div class="card-body">
+              <button class="btn btn-success" 
+                      hx-post="/api/migrate" 
+                      hx-target="#migration-status" 
+                      hx-swap="innerHTML"
+                      hx-indicator="#migration-spinner">
+                <span id="migration-text">Start Migration</span>
+                <span id="migration-spinner" class="htmx-indicator ms-2">
+                  <span class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </span>
+                </span>
+              </button>
+              <div id="migration-status" class="mt-3"></div>
+            </div>
+          </div>
+
+          <!-- Step 3: Find & Replace URLs (Optional) -->
+          <div class="card mb-4" id="findreplace-card" style="display: none">
+            <div class="card-header bg-info text-white">
+              <h5 class="mb-0">Step 3: Find & Replace URLs (Optional)</h5>
+            </div>
+            <div class="card-body">
+              <p class="text-muted mb-4">
+                Clean up URLs in your extracted content before generating the WordPress XML.
+              </p>
+
+              <div class="d-flex gap-3 mb-4">
+                <button class="btn btn-info" onclick="showUrlList()">
+                  🔍 Show All URLs
+                </button>
+                <button class="btn btn-primary" onclick="openGlobalFindReplace()">
+                  🔧 Global Find & Replace
+                </button>
+                <button class="btn btn-outline-secondary ms-auto" onclick="skipToDownload()">
+                  Skip to Download →
+                </button>
+              </div>
+
+              <div id="url-list-section" style="display: none">
+                <div id="url-list-content">
+                  <!-- URL list will be populated here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Download Final XML -->
+          <div class="card mb-4" id="download-card" style="display: none">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">Step 4: Download Final XML</h5>
+            </div>
+            <div class="card-body">
+              <div id="download-section"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Find & Replace Modal -->
+    <div
+      class="modal fade"
+      id="globalFindReplaceModal"
+      tabindex="-1"
+      aria-labelledby="globalFindReplaceModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="globalFindReplaceModalLabel">🔧 Find & Replace URLs</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Replace URLs in your extracted content. Changes will be applied to your WordPress XML export.
+            </div>
+
+            <form id="globalFindReplaceForm">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="globalSearchPattern" class="form-label">Find (text or pattern)</label>
+                  <input
+                    type="text"
+                    class="form-control font-monospace"
+                    id="globalSearchPattern"
+                    placeholder="Enter URL or text pattern to find..."
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="globalReplaceWith" class="form-label">Replace with</label>
+                  <input
+                    type="text"
+                    class="form-control font-monospace"
+                    id="globalReplaceWith"
+                    placeholder="Enter replacement text..."
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="globalUseRegex" />
+                <label class="form-check-label" for="globalUseRegex"> Use regex pattern matching </label>
+              </div>
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+                <button type="button" class="btn btn-outline-primary" onclick="previewGlobalReplace()">
+                  Preview Changes
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  onclick="applyGlobalReplace()"
+                  disabled
+                  id="globalApplyBtn"
+                >
+                  Apply Changes
+                </button>
+              </div>
+            </form>
+
+            <!-- Global Preview Section -->
+            <div id="globalPreviewSection" style="display: none">
+              <hr />
+              <div id="globalPreviewContent">
+                <!-- Global preview will appear here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-Post Find & Replace Modal -->
+    <div
+      class="modal fade"
+      id="findReplaceModal"
+      tabindex="-1"
+      aria-labelledby="findReplaceModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="findReplaceModalLabel">🔍 Find & Replace (This Post Only)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="findReplaceForm">
+              <div class="mb-3">
+                <label for="searchPattern" class="form-label">Find (URL to replace)</label>
+                <input
+                  type="text"
+                  class="form-control font-monospace"
+                  id="searchPattern"
+                  placeholder="https://old-domain.com/path"
+                  readonly
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="replaceWith" class="form-label">Replace with</label>
+                <input
+                  type="text"
+                  class="form-control font-monospace"
+                  id="replaceWith"
+                  placeholder="https://new-domain.com/path"
+                  required
+                />
+              </div>
+
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="useRegex" />
+                <label class="form-check-label" for="useRegex"> Use regex pattern matching </label>
+              </div>
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+                <button type="button" class="btn btn-outline-primary" onclick="previewReplace()">
+                  Preview Changes
+                </button>
+                <button type="button" class="btn btn-success" onclick="applyReplace()" disabled id="applyBtn">
+                  Apply Changes
+                </button>
+              </div>
+            </form>
+
+            <!-- Preview Section -->
+            <div id="previewSection" style="display: none">
+              <hr />
+              <h6>Preview Changes</h6>
+              <div id="previewContent" class="border rounded p-3 bg-light font-monospace small">
+                <!-- Git-style diff will appear here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript modules -->
+    <script src="{{ url_for('static', filename='js/app-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/clipboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/url-management.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/find-replace.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/global-find-replace.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>
