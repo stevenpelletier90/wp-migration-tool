@@ -7,9 +7,9 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
+import newspaper
 import requests
 from bs4 import BeautifulSoup, Tag
-import newspaper
 from newspaper import Article
 from trafilatura import extract, extract_metadata, fetch_url
 
@@ -60,7 +60,7 @@ def extract_blog_post(url: str) -> Optional[Dict]:
                             from dateutil import parser
                             article.publish_date = parser.parse(date_match.group(1))
                             break
-                        except:
+                        except Exception:
                             pass
             
             # Extract tags and categories (including from et_pb_title_meta_container)
@@ -116,7 +116,7 @@ def extract_blog_post(url: str) -> Optional[Dict]:
                 
                 # Remove all attributes except essential ones for links and images
                 for element in content_copy.find_all(True):
-                    if element.attrs:
+                    if hasattr(element, 'attrs') and getattr(element, 'attrs', None):
                         allowed_attrs = {}
                         if element.name == 'a' and 'href' in element.attrs:
                             allowed_attrs['href'] = element.attrs['href']
@@ -125,7 +125,8 @@ def extract_blog_post(url: str) -> Optional[Dict]:
                                 allowed_attrs['src'] = element.attrs['src']
                             if 'alt' in element.attrs:
                                 allowed_attrs['alt'] = element.attrs['alt']
-                        element.attrs = allowed_attrs
+                        element.attrs.clear()
+                        element.attrs.update(allowed_attrs)
                 
                 # Remove ALL spans and styling elements from entire content first
                 for unwanted in content_copy.find_all(['span', 'font', 'b', 'i', 'u', 'center']):
@@ -211,10 +212,13 @@ def extract_blog_post(url: str) -> Optional[Dict]:
                                 if elem.get_text(strip=True):
                                     # Keep only essential attributes
                                     for tag in elem.find_all(True):
-                                        if tag.name == 'a' and 'href' in tag.attrs:
-                                            tag.attrs = {'href': tag.attrs['href']}
-                                        elif tag.name != 'a':
-                                            tag.attrs = {}
+                                        if hasattr(tag, 'attrs'):
+                                            if tag.name == 'a' and 'href' in tag.attrs:
+                                                href = tag.attrs['href']
+                                                tag.attrs.clear()
+                                                tag.attrs['href'] = href
+                                            elif tag.name != 'a':
+                                                tag.attrs.clear()
                                     clean_html += str(elem) + "\n\n"  # Double newline for spacing
                             found_content = True
                             break
@@ -597,7 +601,6 @@ def remove_duplicate_sections(content):
         if len(p_text) > 50:  # Only check substantial paragraphs
             if p_text in seen_content:
                 # Check if this is truly a duplicate (not just similar text)
-                p_html = str(p)
                 for seen in seen_content:
                     if p_text == seen:
                         elements_to_remove.append(p)
@@ -780,28 +783,48 @@ def convert_internal_links_to_relative(content: str, source_url: str) -> str:
 
 
 def main():
-    """Test the modern extractor"""
-    test_urls = [
-        "https://www.fitzgeraldcadillacannapolis.com/blog/2024/september/3/see-why-the-2024-cadillac-lyriq-is-a-leading-electric-luxury-suv.htm",
-        "https://www.fitzgeraldcadillacannapolis.com/blog/2025/april/5/introducing-the-new-cadillac-vistiq-electric-luxury-sedan.htm"
-    ]
+    """Extract URLs from config/urls.txt using modern extractor"""
+    import os
     
-    print("TESTING MODERN EXTRACTOR")
+    print("MODERN EXTRACTOR")
     print("=" * 50)
     
+    # Load URLs from config
+    urls = []
+    urls_file = os.path.join(os.path.dirname(__file__), "..", "config", "urls.txt")
+    
+    if os.path.exists(urls_file):
+        with open(urls_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    urls.append(line)
+    
+    if not urls:
+        print(f"No URLs found in {urls_file}")
+        print("Add URLs to config/urls.txt (one per line)")
+        return False
+    
+    print(f"Found {len(urls)} URLs to process\n")
+    
     posts = []
-    for url in test_urls:
+    for i, url in enumerate(urls, 1):
+        print(f"[{i}/{len(urls)}] Extracting: {url}")
         post = extract_blog_post(url)
         if post:
             posts.append(post)
+            print(f"  SUCCESS: {post['title'][:60]}...")
+        else:
+            print("  FAILED: Could not extract content")
     
-    print(f"\nExtracted {len(posts)} posts successfully!")
+    print(f"\nExtracted {len(posts)}/{len(urls)} posts successfully!")
     
     if posts:
         xml_content = generate_wordpress_xml(posts)
-        with open("modern_export.xml", "w", encoding="utf-8") as f:
+        output_file = os.path.join(os.path.dirname(__file__), "..", "output", "modern_export.xml")
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(xml_content)
-        print("Generated modern_export.xml")
+        print(f"Generated {output_file}")
     
     return len(posts) > 0
 

@@ -8,7 +8,7 @@ from typing import Dict
 
 from flask import Flask, jsonify, render_template, request, session
 
-from modern_extractor import extract_blog_post, generate_wordpress_xml
+from extractors.modern_extractor import extract_blog_post, generate_wordpress_xml
 
 app = Flask(__name__)
 app.secret_key = 'modern-migration-tool-2025'

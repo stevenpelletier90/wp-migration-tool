@@ -47,8 +47,13 @@
       "Bash(taskkill:*)",
       "Bash(\"venv\\Scripts\\ruff.exe\":*)",
       "Bash(venvScriptspip.exe install newspaper3k trafilatura python-dateutil)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(where claude)",
+      "Bash(del \"C:\\Users\\steve\\.local\\bin\\claude.exe\")",
+      "Bash(git checkout:*)",
+      "Bash(grep:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

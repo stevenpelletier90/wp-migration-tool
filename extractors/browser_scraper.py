@@ -3,24 +3,20 @@
 Browser-based scraper using Selenium to handle JavaScript-heavy and protected sites
 """
 
-import time
-import os
-from pathlib import Path
-from typing import List, Dict, Optional
-from datetime import datetime
-import re
 import json
-
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, WebDriverException
+import os
+import re
+import time
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from bs4 import BeautifulSoup
-from modern_extractor import generate_wordpress_xml
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class BrowserScraper:
@@ -141,7 +137,7 @@ class BrowserScraper:
                             from dateutil import parser
                             pub_date = parser.parse(date_match.group(1))
                             break
-                        except:
+                        except Exception:
                             pass
             
             # Try other date selectors
@@ -162,7 +158,7 @@ class BrowserScraper:
                             from dateutil import parser
                             pub_date = parser.parse(date_text)
                             break
-                        except:
+                        except Exception:
                             pass
             
             # Extract categories
@@ -344,7 +340,7 @@ class BrowserScraper:
             return
         
         # Use fixed XML generation to avoid double-encoding
-        from fixed_extractor import generate_wordpress_xml_fixed
+        from .fixed_extractor import generate_wordpress_xml_fixed
         xml_content = generate_wordpress_xml_fixed(self.posts)
         
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -374,57 +370,120 @@ class BrowserScraper:
 
 
 def main():
-    """Main function for browser-based scraping"""
-    print("Browser-Based Blog Scraper")
-    print("=" * 50)
+    """Automated browser scraper - reads from config/urls.txt"""
+    print("=" * 60)
+    print("AUTOMATED BROWSER SCRAPER")
+    print("=" * 60)
     
-    # Check for URLs file
-    urls_file = "urls.txt"
+    # Load URLs from config
     urls = []
+    urls_file = os.path.join(os.path.dirname(__file__), "..", "config", "urls.txt")
     
     if os.path.exists(urls_file):
-        with open(urls_file, 'r') as f:
-            urls = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-        print(f"Found {len(urls)} URLs in {urls_file}")
-    else:
-        print(f"No {urls_file} found. Enter URLs manually (one per line, empty line to finish):")
-        while True:
-            url = input().strip()
-            if not url:
-                break
-            if url.startswith('http'):
-                urls.append(url)
+        with open(urls_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    urls.append(line)
     
     if not urls:
-        print("No URLs to process")
+        print(f"No URLs found in {urls_file}")
+        print("Add URLs to config/urls.txt (one per line)")
         return
     
-    print(f"\nReady to process {len(urls)} URLs")
-    print("This will use a real browser to load each page")
+    print(f"\nFound {len(urls)} URLs to process")
+    print("Starting in 3 seconds...")
+    time.sleep(3)
     
-    # Ask for headless mode
-    headless_input = input("\nRun in headless mode? (y/n, default=n): ").strip().lower()
-    headless = headless_input == 'y'
-    
-    # Create scraper
-    scraper = BrowserScraper(headless=headless, wait_time=10)
+    # Create scraper (headless by default for automation)
+    print("\nInitializing Chrome browser (headless mode)...")
+    scraper = BrowserScraper(headless=True, wait_time=10)
     
     try:
-        # Process URLs
-        scraper.process_urls(urls, delay=3)
+        # Setup browser
+        scraper.setup_driver()
+        print("Browser initialized successfully\n")
         
-        # Save results
-        scraper.save_results("browser_export.xml")
+        # Process each URL
+        print(f"Processing {len(urls)} URLs...")
+        print(f"This will take approximately {len(urls) * 5} seconds\n")
         
-        print("\n" + "=" * 50)
-        print("SUMMARY")
-        print(f"Successfully extracted: {len(scraper.posts)}/{len(urls)} posts")
-        print("Output files:")
-        print("  - browser_export.xml (WordPress import)")
-        print("  - browser_export.json (debug data)")
+        successful = 0
+        failed = []
         
+        for i, url in enumerate(urls, 1):
+            print(f"[{i}/{len(urls)}] Processing...")
+            print(f"  URL: {url[:80]}...")
+            
+            try:
+                post = scraper.extract_content(url)
+                
+                if post:
+                    scraper.posts.append(post)
+                    successful += 1
+                    print(f"  SUCCESS: {post['title'][:60]}...")
+                else:
+                    failed.append(url)
+                    print("  FAILED: Could not extract content")
+            except Exception as e:
+                failed.append(url)
+                print(f"  ERROR: {str(e)[:60]}")
+            
+            # Progress indicator
+            progress = (i / len(urls)) * 100
+            print(f"  Progress: {progress:.1f}% complete\n")
+            
+            # Respectful delay
+            if i < len(urls):
+                time.sleep(3)
+        
+        # Results summary
+        print("\n" + "=" * 60)
+        print("PROCESSING COMPLETE")
+        print("=" * 60)
+        print(f"Successfully extracted: {successful}/{len(urls)} posts")
+        
+        if scraper.posts:
+            # Save WordPress XML
+            output_file = os.path.join(os.path.dirname(__file__), "..", "output", "wordpress_import.xml")
+            scraper.save_results(output_file)
+            
+            print(f"\nWordPress import file created: {output_file}")
+            print("\nTo import into WordPress:")
+            print("1. Go to WordPress Admin -> Tools -> Import")
+            print("2. Select 'WordPress' importer")
+            print("3. Upload wordpress_import.xml")
+            print("4. Assign authors and import")
+        
+        if failed:
+            print(f"\nFailed to extract {len(failed)} URLs:")
+            for url in failed[:5]:  # Show first 5
+                print(f"  - {url}")
+            if len(failed) > 5:
+                print(f"  ... and {len(failed) - 5} more")
+            
+            # Save failed URLs
+            failed_file = os.path.join(os.path.dirname(__file__), "..", "output", "failed_urls.txt")
+            with open(failed_file, "w") as f:
+                for url in failed:
+                    f.write(url + "\n")
+            print(f"\nFailed URLs saved to: {failed_file}")
+            print("You can retry these URLs later")
+    
+    except Exception as e:
+        print(f"\nError during processing: {e}")
+        print("\nTroubleshooting:")
+        print("1. Make sure Google Chrome is installed")
+        print("2. Download ChromeDriver from: https://chromedriver.chromium.org/")
+        print("3. Place chromedriver.exe in config/ directory or in PATH")
+    
     finally:
-        scraper.cleanup()
+        # Cleanup
+        try:
+            scraper.cleanup()
+        except Exception:
+            pass
+        print("\nProcessing complete!")
 
 
 if __name__ == "__main__":

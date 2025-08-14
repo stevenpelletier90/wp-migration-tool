@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Fixed XML generation for WordPress - no double encoding"""
 
-import xml.etree.ElementTree as ET
-from datetime import datetime
 import re
+from datetime import datetime
+
 
 def generate_wordpress_xml_fixed(posts):
     """Generate WordPress XML without double-encoding HTML"""
