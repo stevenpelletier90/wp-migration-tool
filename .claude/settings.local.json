@@ -51,7 +51,9 @@
       "Bash(where claude)",
       "Bash(del \"C:\\Users\\steve\\.local\\bin\\claude.exe\")",
       "Bash(git checkout:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(venv\\Scripts\\python.exe:*)",
+      "WebSearch"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

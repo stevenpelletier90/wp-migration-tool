@@ -8,7 +8,8 @@ from typing import Dict
 
 from flask import Flask, jsonify, render_template, request, session
 
-from extractors.modern_extractor import extract_blog_post, generate_wordpress_xml
+from extractors.smart_extractor import extract_blog_post
+from extractors.xml_generator import generate_wordpress_xml_fixed
 
 app = Flask(__name__)
 app.secret_key = 'modern-migration-tool-2025'
@@ -552,7 +553,7 @@ def download():
         return jsonify({'error': 'No posts to export'}), 400
     
     # Generate XML using modern extractor
-    xml_content = generate_wordpress_xml(data['posts'])
+    xml_content = generate_wordpress_xml_fixed(data['posts'])
     
     # Return as downloadable file
     from flask import Response
@@ -577,7 +578,7 @@ def download_original():
     original_posts = data.get('original_posts', data['posts'])
     
     # Generate XML using modern extractor
-    xml_content = generate_wordpress_xml(original_posts)
+    xml_content = generate_wordpress_xml_fixed(original_posts)
     
     # Return as downloadable file
     from flask import Response
