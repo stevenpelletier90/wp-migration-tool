@@ -54,7 +54,10 @@
       "Bash(grep:*)",
       "Bash(venv\\Scripts\\python.exe:*)",
       "WebSearch",
-      "WebFetch(domain:dealer14835.dealeron.com)"
+      "WebFetch(domain:dealer14835.dealeron.com)",
+      "Bash(venv/bin/pip install:*)",
+      "Bash(venv/bin/python:*)",
+      "Bash(venv/bin/pip list:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
