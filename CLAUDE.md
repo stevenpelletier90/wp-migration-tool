@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **✅ Fully Functional** - Modern web interface with advanced content extraction
 **✅ Smart URL Management** - Separate hyperlinks from images with context
 **✅ Selective Find & Replace** - Choose exactly which URLs to modify
-**✅ Modern Content Extraction** - Using newspaper3k and trafilatura libraries
+**✅ Modern Content Extraction** - Using HTTPX + selectolax (2025 cutting-edge stack)
 **✅ Clean UI/UX** - Professional interface with copy functionality
 **✅ Organized Structure** - Files properly organized by purpose
 **✅ Type Safety** - Proper type stubs installed for BeautifulSoup
@@ -69,7 +69,7 @@ C:\Users\steve\Downloads\wp-migration-tool\
 ├── config/                      # Configuration files
 │   └── urls.txt                 # URL source file
 ├── extractors/                  # Content extraction and XML generation
-│   ├── smart_extractor.py       # Content extraction (trafilatura + newspaper3k)
+│   ├── modern_extractor.py      # Modern content extraction (selectolax - ultra-fast)
 │   └── xml_generator.py         # WordPress XML generation
 ├── output/                      # Generated WordPress XML files
 │   └── wordpress_import_batch_*.xml  # Ready for WordPress import
@@ -87,11 +87,13 @@ C:\Users\steve\Downloads\wp-migration-tool\
 
 ### 🎯 **Modern Content Extraction**
 
-- **newspaper3k library** - Primary extraction with fallback to trafilatura
+- **HTTPX with HTTP/2** - Modern HTTP client with next-gen protocol support
+- **selectolax library** - Ultra-fast HTML parser (10-100x faster than BeautifulSoup)
 - **Smart content detection** - Finds main content areas, excludes navigation
-- **Full metadata extraction** - Titles, dates, categories, tags, complete HTML
-- **Clean XML output** - Removes invalid characters, proper CDATA handling
-- **WordPress WXR format** - Ready for direct WordPress import
+- **Clean content extraction** - No HTML/body wrappers, pure content only
+- **Full metadata extraction** - Titles, dates, categories, tags from content areas
+- **WordPress WXR format** - Ready for direct WordPress import with Gutenberg blocks
+- **2025 cutting-edge** - Latest recommended stack, zero legacy dependencies
 
 ### 🔗 **Smart URL Management**
 

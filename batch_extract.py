@@ -7,7 +7,7 @@ Fast backend processing without web interface
 from datetime import datetime
 from pathlib import Path
 
-from extractors.smart_extractor import extract_blog_post
+from extractors.modern_extractor import extract_blog_post
 from extractors.xml_generator import generate_wordpress_xml_fixed
 
 

@@ -8,7 +8,7 @@ from typing import Dict
 
 from flask import Flask, jsonify, render_template, request, session
 
-from extractors.smart_extractor import extract_blog_post
+from extractors.modern_extractor import extract_blog_post
 from extractors.xml_generator import generate_wordpress_xml_fixed
 
 app = Flask(__name__)

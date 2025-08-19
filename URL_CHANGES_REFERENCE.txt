@@ -1,0 +1,20 @@
+URL CHANGES REFERENCE LIST
+==================================================
+
+Original find/replace:
+/new-inventory/index.htm -> /searchnew.aspx
+/used-inventory/index.htm -> /searchused.aspx
+/certified-inventory/index.htm -> /certified-pre-owned.html
+/dealership/new-ford-near-somers-new-york -> /
+
+Additional changes:
+/service/index.htm -> /service.aspx
+/contact.htm -> /contactus.aspx
+/promotions/new/index.htm -> /newspecials.html
+/pickupanddelivery.htm -> /ford-pickup-delivery-service.html
+/f150lightning.htm -> /ev-lightning
+/service-scheduler.htm -> /schedule-service
+/custom-order/your-ford-your-way.htm -> /custom-factory-order.html
+
+==================================================
+Save this list for future reference!

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fixed XML generation for WordPress - no double encoding"""
+"""Modern XML generation for WordPress - clean and compatible"""
 
 import re
 from datetime import datetime
@@ -131,26 +131,21 @@ def wrap_in_gutenberg_html_block(content):
     return f'<!-- wp:html -->\n{clean_content}\n<!-- /wp:html -->'
 
 def clean_content_for_cdata(content):
-    """Clean content for CDATA section - minimal processing"""
+    """Clean content for CDATA section - modern approach"""
     if not content:
         return ""
     
-    # Only remove invalid XML characters that would break parsing
-    valid_chars = []
-    for char in content:
-        code = ord(char)
-        # Valid XML 1.0 characters
-        if (code == 0x09 or code == 0x0A or code == 0x0D or 
-            (0x20 <= code <= 0xD7FF) or (0xE000 <= code <= 0xFFFD) or 
-            (0x10000 <= code <= 0x10FFFF)):
-            valid_chars.append(char)
+    # Modern approach: use string methods for efficiency
+    content = str(content)
     
-    content = ''.join(valid_chars)
-    
-    # Make sure CDATA section doesn't contain ]]>
+    # Remove any problematic CDATA sequences
     content = content.replace(']]>', ']] >')
     
-    return content
+    # Remove control characters except tab, newline, carriage return
+    content = ''.join(char for char in content 
+                     if ord(char) >= 32 or ord(char) in (9, 10, 13))
+    
+    return content.strip()
 
 # Test the fixed version
 if __name__ == "__main__":
